@@ -1,0 +1,1 @@
+# ScoutData-Compression-Algorithm
