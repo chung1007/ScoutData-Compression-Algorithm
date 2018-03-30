@@ -1,18 +1,11 @@
 package sam.scoutdatacompression;
 
-import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 
 public class MainActivity extends AppCompatActivity {
@@ -26,7 +19,7 @@ public class MainActivity extends AppCompatActivity {
 
     //todo use this method to pass the stringed scout data json.
 
-    public String finalCompressedScoutData(String scoutJSON){
+    public String finalCompressedScoutData(String scoutJSON) {
         String compressedData = "";
         try {
             //FIRST, COMPRESS THE DATAPOINTS THAT HAVE NO NESTED KEYS
@@ -55,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
                     }else{
                         JSONArray list = uncompressedUnderHeaderKey.getJSONArray(key);
                         JSONArray compressedList = new JSONArray();
-                        for(int i = 0; i < list.length()-1; i++ ){
+                        for(int i = 0; i < list.length(); ++i){
                             compressedList.put(Integer.parseInt(Constant.compressValues.get(list.get(i).toString())));
                         }
                         compressed.put(Constant.compressKeys.get(key),compressedList);
@@ -64,13 +57,13 @@ public class MainActivity extends AppCompatActivity {
             }
             //THEN, COMPRESS DATAPOINTS WITH NESTED KEYS
             for(int i = 0; i < Constant.nestedKeys.size(); i++){
-                JSONObject compressedJ1 = new JSONObject();
                 JSONArray listOfDicts = new JSONArray();
                 String nestedKey = Constant.nestedKeys.get(i);
                 if(!nestedKey.equals("climb")) {
                     if (uncompressedUnderHeaderKey.has(nestedKey)) {
                         JSONArray keyWithNestedKeys = uncompressedUnderHeaderKey.getJSONArray(nestedKey);
                         for (int j = 0; j < keyWithNestedKeys.length(); ++j){
+                            JSONObject compressedJ1 = new JSONObject();
                             JSONObject j1 = keyWithNestedKeys.getJSONObject(j);
                             Iterator<?> j1Keys = j1.keys();
                             while (j1Keys.hasNext()) {
@@ -92,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
                 }else{
                     //CLIMB DATA HAS DOUBLE NESTED KEYS
                     for (int k = 0; k < uncompressedUnderHeaderKey.getJSONArray(nestedKey).length(); ++k){
+                        JSONObject compressedJ2 = new JSONObject();
                         JSONObject climbData = uncompressedUnderHeaderKey.getJSONArray(nestedKey).getJSONObject(k);
                         JSONObject tempCompressed = new JSONObject();
                         String climbTitle = getHeaderKey(climbData.keys());
@@ -101,15 +95,15 @@ public class MainActivity extends AppCompatActivity {
                             String key = (String) j1Keys.next();
                             if (Constant.compressValues.containsKey(climbDetails.get(key).toString())) {
                                 if(climbDetails.get(key).toString().equals("true") || climbDetails.get(key).toString().equals("false")){
-                                    compressedJ1.put(Constant.compressKeys.get(key), Double.parseDouble(Constant.compressValues.get(climbDetails.get(key).toString())));
+                                    compressedJ2.put(Constant.compressKeys.get(key), Double.parseDouble(Constant.compressValues.get(climbDetails.get(key).toString())));
                                 }else{
-                                    compressedJ1.put(Constant.compressKeys.get(key), Constant.compressValues.get(climbDetails.get(key).toString()));
+                                    compressedJ2.put(Constant.compressKeys.get(key), Constant.compressValues.get(climbDetails.get(key).toString()));
                                 }
                             } else {
-                                compressedJ1.put(Constant.compressKeys.get(key), Double.parseDouble(climbDetails.get(key).toString()));
+                                compressedJ2.put(Constant.compressKeys.get(key), Double.parseDouble(climbDetails.get(key).toString()));
                             }
                         }
-                        tempCompressed.put(Constant.compressKeys.get(climbTitle), compressedJ1);
+                        tempCompressed.put(Constant.compressKeys.get(climbTitle), compressedJ2);
                         listOfDicts.put(tempCompressed);
                         compressed.put(Constant.compressKeys.get(nestedKey), listOfDicts);
                     }
@@ -117,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             compressedData = headerKey + "|" + compressed.toString().substring(1, compressed.toString().length()-1).replace("\"", "").replace(" ", "");
-            Log.e("FINAL", compressedData);
+            Log.e("FINAL", compressedData.toString());
         } catch (JSONException JE) {
             Log.e("CHECKPOINT", "SOMETHING WENT WRONG");
         }
@@ -131,4 +125,5 @@ public class MainActivity extends AppCompatActivity {
         }
         return key;
     }
+
 }
